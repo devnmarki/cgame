@@ -31,6 +31,8 @@ namespace cgame
         Surface(SDL_Surface* existing)
         {
             surface = existing;
+            width = existing->w;
+            height = existing->h;
         }
 
         ~Surface()
@@ -44,10 +46,25 @@ namespace cgame
             SDL_FillSurfaceRect(surface, NULL, SDL_MapSurfaceRGB(surface, color.r, color.g, color.b));
         }
 
-        void blit(Surface &surf, float x, float y)
+        void blit(Surface &surf, float x, float y, int w = -1, int h = -1)
         {
-            SDL_Rect dstRect = { x, y, surf.getWidth(), surf.getHeight() };
-            SDL_BlitSurface(surf.surface, NULL, surface, &dstRect);
+            SDL_Rect dstRect;
+            dstRect.x = x;
+            dstRect.y = y;
+            dstRect.w = (w == -1) ? surf.getWidth() : w;
+            dstRect.h = (h == -1) ? surf.getHeight() : h;
+            
+            SDL_BlitSurfaceScaled(surf.surface, NULL, surface, &dstRect, SDL_SCALEMODE_NEAREST);
+        }
+
+        void setWidth(int _width)
+        {
+            width = _width;
+        }
+
+        void setHeight(int _height)
+        {
+            height = _height;
         }
 
         int getWidth()
@@ -115,9 +132,9 @@ namespace cgame
             screenSurface->fill(color);
         }
 
-        void blit(Surface& surface, float x, float y)
+        void blit(Surface& surface, int x, int y, int w = -1, int h = -1)
         {
-            screenSurface->blit(surface, x, y);
+            screenSurface->blit(surface, x, y, w, h);
         }
 
         void update()

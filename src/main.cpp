@@ -21,7 +21,7 @@ int main(int argc, char* argv[])
 
     cgame::Surface testImg = cgame::loadImage("assets/images/player.png");
     
-    float x = 100;
+    int x = 100;
 
     bool running = true;
     
@@ -45,7 +45,7 @@ int main(int argc, char* argv[])
 
         x += 3;
         window.blit(blueBox, 100, 200);
-        window.blit(testImg, x, 400);
+        window.blit(testImg, x, 400, testImg.getWidth() * 4, testImg.getHeight() * 4);
 
         window.update();
         float dt = clock.tick(60);
