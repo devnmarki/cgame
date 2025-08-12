@@ -13,6 +13,9 @@ int main(int argc, char* argv[])
     }
 
     cgame::Window window(1280, 720, "CGame example");
+    cgame::time::Clock clock;
+    
+    cgame::Surface blueBox(window.renderer, 50, 100);
 
     bool running = true;
     SDL_Event e;
@@ -28,11 +31,15 @@ int main(int argc, char* argv[])
         }
 
         window.fill({255, 0, 0, 255});
+        
+        blueBox.fill({0, 0, 255, 255});
+        window.blit(blueBox, 200, 300);
 
         window.update();
+        float dt = clock.tick(60);
     }
 
-    SDL_Quit();
+    cgame::quit();
 
     return 0;
 }

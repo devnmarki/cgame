@@ -25,6 +25,8 @@ namespace cgame
             : renderer(_renderer), width(_width), height(_height)
         {
             texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, width, height);
+
+            SDL_SetTextureBlendMode(texture, SDL_BLENDMODE_BLEND);
         }
 
         void fill(Color color)
@@ -32,6 +34,14 @@ namespace cgame
             SDL_SetRenderTarget(renderer, texture);
             SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
             SDL_RenderClear(renderer);
+            SDL_SetRenderTarget(renderer, NULL);
+        }
+
+        void blit(Surface& surface, float x, float y)
+        {
+            SDL_SetRenderTarget(renderer, texture);
+            SDL_FRect dstRect = { x, y, surface.width, surface.height };
+            SDL_RenderTexture(renderer, surface.getTexture(), NULL, &dstRect);
             SDL_SetRenderTarget(renderer, NULL);
         }
 
@@ -81,6 +91,11 @@ namespace cgame
             screen->fill(color);
         }
 
+        void blit(Surface& surface, float x, float y)
+        {
+            screen->blit(surface, x, y);
+        }
+
         void update()
         {
             SDL_SetRenderTarget(renderer, NULL);
@@ -93,6 +108,40 @@ namespace cgame
         int width, height;
         const char* title;
     };
+
+    void quit()
+    {
+        SDL_Quit();
+    }
+
+    namespace time
+    {
+        class Clock
+        {
+        public:
+            Clock() 
+            {
+                lastTick = SDL_GetTicks();
+            }
+
+            float tick(int fps = 0)
+            {
+                Uint32 now = SDL_GetTicks();
+                float delta = (now - lastTick) / 1000.0f;
+                lastTick = now;
+                if (fps > 0)
+                {
+                    Uint32 frameDelay = 1000 / fps;
+                    Uint32 frameTime = SDL_GetTicks() - now;
+                    if (frameDelay > frameTime)
+                        SDL_Delay(frameDelay - frameTime);
+                }
+                return delta;
+            }
+        private:
+            Uint32 lastTick = 0;
+        };
+    }
 }
 
 #endif
