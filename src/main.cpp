@@ -26,6 +26,10 @@ int main(int argc, char* argv[])
                 running = false;
             }
         }
+
+        window.fill({255, 0, 0, 255});
+
+        window.update();
     }
 
     SDL_Quit();

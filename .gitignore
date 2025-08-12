@@ -1,0 +1,69 @@
+# =========================
+# Build & Compiler Files
+# =========================
+# Object files
+*.o
+*.obj
+
+# Precompiled headers
+*.gch
+*.pch
+
+# Compiled dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Executables
+*.exe
+*.out
+*.app
+
+# Static libraries
+*.a
+*.lib
+
+# Build directories
+/build/
+/bin/
+/dist/
+/inc/
+
+# Debugging / profiling
+*.log
+*.stackdump
+*.core
+*.pdb
+
+# =========================
+# SDL Local Binaries
+# =========================
+# Ignore local SDL binary files
+SDL2.dll
+SDL2_image.dll
+SDL2_mixer.dll
+SDL2_ttf.dll
+libSDL2*.so
+libSDL2*.dylib
+
+/lib/
+
+# =========================
+# OS / IDE junk
+# =========================
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+Desktop.ini
+
+# VS Code
+.vscode/
+
+# CLion / JetBrains
+.idea/
+
+# Code::Blocks
+*.depend
+*.layout
