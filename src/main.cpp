@@ -9,7 +9,7 @@ int main(int argc, char* argv[])
 {
     if (!SDL_Init(SDL_INIT_VIDEO)) 
     {
-        std::cerr << "Failed to initialize SDL. Error: " << SDL_GetError() << std::endl;
+        std::cerr << "Failed to initialize SDL. " << SDL_GetError() << std::endl;
     }
 
     cgame::Window window(1280, 720, "CGame example");
@@ -18,6 +18,8 @@ int main(int argc, char* argv[])
     
     cgame::Surface blueBox(50, 100);
     blueBox.fill({0, 0, 255, 255});
+
+    cgame::Surface testImg = cgame::loadImage("assets/images/player.png");
     
     float x = 100;
 
@@ -42,7 +44,8 @@ int main(int argc, char* argv[])
         window.fill({255, 0, 0, 255});
 
         x += 3;
-        window.blit(blueBox, x, 200);
+        window.blit(blueBox, 100, 200);
+        window.blit(testImg, x, 400);
 
         window.update();
         float dt = clock.tick(60);

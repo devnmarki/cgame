@@ -69,6 +69,18 @@ namespace cgame
         int width, height;
     };
 
+    Surface loadImage(const char* filePath)
+    {
+        SDL_Surface* img = IMG_Load(filePath);
+        if (!img)
+        {
+            std::cerr << "Failed to load image. Error: " << filePath << SDL_GetError() << std::endl;
+            return Surface(0, 0);
+        }
+
+        return Surface(img);
+    }
+
     class Window 
     {
     public:
