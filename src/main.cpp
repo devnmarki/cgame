@@ -1,4 +1,6 @@
 #include <iostream>
+#include <sstream>
+#include <iomanip>
 
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_image.h>
@@ -20,8 +22,7 @@ int main(int argc, char* argv[])
     blueBox.fill({0, 0, 255, 255});
 
     cgame::Surface testImg = cgame::loadImage("assets/images/player.png");
-    
-    int x = 100;
+    cgame::Rect testImgRect = testImg.getRect(100, 400);
 
     bool running = true;
     
@@ -43,9 +44,13 @@ int main(int argc, char* argv[])
 
         window.fill({255, 0, 0, 255});
 
-        x += 3;
+        std::ostringstream ss;
+        ss << std::fixed << std::setprecision(0) << clock.getFPS();
+        window.setTitle(("CGame example | FPS: " + ss.str()).c_str());
+
+        testImgRect.set_left(testImgRect.left() + 1);
         window.blit(blueBox, 100, 200);
-        window.blit(testImg, x, 400, testImg.getWidth() * 4, testImg.getHeight() * 4);
+        window.blit(testImg, testImgRect, testImg.getWidth() * 4, testImg.getHeight() * 4);
 
         window.update();
         float dt = clock.tick(60);
