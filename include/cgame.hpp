@@ -21,46 +21,57 @@ namespace cgame
     class Surface
     {
     public:
-        Surface(SDL_Renderer* _renderer, int _width, int _height)
-            : renderer(_renderer), width(_width), height(_height)
+        Surface(int _width, int _height)
+            : width(_width), height(_height)
         {
-            texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, width, height);
 
-            SDL_SetTextureBlendMode(texture, SDL_BLENDMODE_BLEND);
+            surface = SDL_CreateSurface(width, height, SDL_PIXELFORMAT_RGBA8888);
+        }
+
+        Surface(SDL_Surface* existing)
+        {
+            surface = existing;
+        }
+
+        ~Surface()
+        {
+            if (surface)
+                SDL_DestroySurface(surface);
         }
 
         void fill(Color color)
         {
-            SDL_SetRenderTarget(renderer, texture);
-            SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
-            SDL_RenderClear(renderer);
-            SDL_SetRenderTarget(renderer, NULL);
+            SDL_FillSurfaceRect(surface, NULL, SDL_MapSurfaceRGB(surface, color.r, color.g, color.b));
         }
 
-        void blit(Surface& surface, float x, float y)
+        void blit(Surface &surf, float x, float y)
         {
-            SDL_SetRenderTarget(renderer, texture);
-            SDL_FRect dstRect = { x, y, surface.width, surface.height };
-            SDL_RenderTexture(renderer, surface.getTexture(), NULL, &dstRect);
-            SDL_SetRenderTarget(renderer, NULL);
+            SDL_Rect dstRect = { x, y, surf.getWidth(), surf.getHeight() };
+            SDL_BlitSurface(surf.surface, NULL, surface, &dstRect);
         }
 
-        SDL_Texture* getTexture()
+        int getWidth()
         {
-            return texture;
+            return width;
+        }
+
+        int getHeight()
+        {
+            return height;
+        }
+
+        SDL_Surface* getSurface()
+        {
+            return surface;
         }
     private:
-        SDL_Renderer* renderer;
-        SDL_Texture* texture;
+        SDL_Surface* surface;
         int width, height;
     };
 
     class Window 
     {
     public:
-        SDL_Renderer* renderer;    
-        Surface* screen;    
-
         Window(int _width, int _height, const char* _title)
             : width(_width), height(_height), title(_title)
         {
@@ -76,35 +87,41 @@ namespace cgame
                 std::cerr << "Failed to create renderer. Error: " << SDL_GetError() << std::endl;
             }
 
-            screen = new Surface(renderer, width, height);
+            screenSurface = new Surface(width, height);
+            texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, width, height);
         }   
         
         ~Window()
         {
-            delete screen;
+            delete screenSurface;
             SDL_DestroyWindow(window);
             SDL_DestroyRenderer(renderer);
         }
 
         void fill(Color color)
         {
-            screen->fill(color);
+            screenSurface->fill(color);
         }
 
         void blit(Surface& surface, float x, float y)
         {
-            screen->blit(surface, x, y);
+            screenSurface->blit(surface, x, y);
         }
 
         void update()
         {
-            SDL_SetRenderTarget(renderer, NULL);
-            SDL_RenderTexture(renderer, screen->getTexture(), NULL, NULL);
-            SDL_RenderPresent(renderer);
+           SDL_UpdateTexture(texture, NULL, screenSurface->getSurface()->pixels, screenSurface->getSurface()->pitch);
+           SDL_RenderClear(renderer);
+           SDL_RenderTexture(renderer, texture, NULL, NULL);
+           SDL_RenderPresent(renderer);
         }
 
     private:
         SDL_Window* window;
+        SDL_Renderer* renderer;    
+        Surface* screenSurface;    
+        SDL_Texture* texture;
+
         int width, height;
         const char* title;
     };
