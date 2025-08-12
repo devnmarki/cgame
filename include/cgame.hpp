@@ -131,33 +131,82 @@ namespace cgame
         SDL_Quit();
     }
 
-    namespace time
+    class Clock
     {
-        class Clock
+    public:
+        Clock() 
         {
-        public:
-            Clock() 
-            {
-                lastTick = SDL_GetTicks();
-            }
+            lastTick = SDL_GetTicks();
+        }
 
-            float tick(int fps = 0)
+        float tick(int fps = 0)
+        {
+            Uint32 now = SDL_GetTicks();
+            float delta = (now - lastTick) / 1000.0f;
+            lastTick = now;
+            if (fps > 0)
             {
-                Uint32 now = SDL_GetTicks();
-                float delta = (now - lastTick) / 1000.0f;
-                lastTick = now;
-                if (fps > 0)
-                {
-                    Uint32 frameDelay = 1000 / fps;
-                    Uint32 frameTime = SDL_GetTicks() - now;
-                    if (frameDelay > frameTime)
-                        SDL_Delay(frameDelay - frameTime);
-                }
-                return delta;
+                Uint32 frameDelay = 1000 / fps;
+                Uint32 frameTime = SDL_GetTicks() - now;
+                if (frameDelay > frameTime)
+                    SDL_Delay(frameDelay - frameTime);
             }
-        private:
-            Uint32 lastTick = 0;
-        };
+            return delta;
+        }
+    private:
+        Uint32 lastTick = 0;
+    };
+
+    enum EventType
+    {
+        QUIT,
+        KEYDOWN,
+        KEYUP,
+        MOUSEDOWN,
+        MOUSEUP
+    };
+
+    struct Event
+    {
+        EventType type;
+        SDL_Keycode key;
+        int mouseX, mouseY;
+        Uint8 mouseButton;
+    };
+
+    bool getEvents(Event& e)
+    {
+        SDL_Event sdlEvent;
+        if (SDL_PollEvent(&sdlEvent))
+        {
+            switch (sdlEvent.type)
+            {
+            case SDL_EVENT_QUIT:
+                e.type = QUIT;
+                return true;
+            case SDL_EVENT_KEY_DOWN:
+                e.type = KEYDOWN;
+                e.key = sdlEvent.key.key;
+                return true;
+            case SDL_EVENT_KEY_UP:
+                e.type = KEYUP;
+                e.key = sdlEvent.key.key;
+                return true;
+            case SDL_EVENT_MOUSE_BUTTON_DOWN:
+                e.type = MOUSEDOWN;
+                e.mouseX = sdlEvent.button.x;
+                e.mouseY = sdlEvent.button.y;
+                e.mouseButton = sdlEvent.button.button;
+                return true;
+            case SDL_EVENT_MOUSE_BUTTON_UP:
+                e.type = MOUSEUP;
+                e.mouseX = sdlEvent.button.x;
+                e.mouseY = sdlEvent.button.y;
+                e.mouseButton = sdlEvent.button.button;
+                return true;
+            }
+        }
+        return false;
     }
 }
 

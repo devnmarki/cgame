@@ -13,7 +13,7 @@ int main(int argc, char* argv[])
     }
 
     cgame::Window window(1280, 720, "CGame example");
-    cgame::time::Clock clock;
+    cgame::Clock clock;
     
     
     cgame::Surface blueBox(50, 100);
@@ -22,15 +22,20 @@ int main(int argc, char* argv[])
     float x = 100;
 
     bool running = true;
-    SDL_Event e;
     
     while (running)
     {
-        if (SDL_PollEvent(&e))
+        cgame::Event e;
+        while (cgame::getEvents(e))
         {
-            if (e.type == SDL_EVENT_QUIT)
+            if (e.type == cgame::QUIT)
             {
                 running = false;
+            }
+            if (e.type == cgame::KEYDOWN)
+            {
+                if (e.key == SDLK_ESCAPE)
+                    running = false;
             }
         }
 
