@@ -1,6 +1,7 @@
 #pragma once
 
 #include <iostream>
+#include <tuple>
 
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_image.h>
@@ -16,6 +17,14 @@ namespace cgame
         Uint8 g;
         Uint8 b;
         Uint8 a = 255;
+    };
+
+    struct Vec2
+    {
+        float x, y;
+
+        Vec2() : x(0), y(0) { }
+        Vec2(float _x, float _y) : x(_x), y(_y) { }
     };
 
     struct Rect
@@ -38,6 +47,11 @@ namespace cgame
         bool colliderect(const Rect &other)
         {
             return !(x + w <= other.x || other.x + other.w <= x || y + h <= other.y || other.y + other.h <= y);
+        }
+
+        bool collidepoint(float px, float py)
+        {
+                return (px >= x && px <= x + w && py >= y && py <= y + h);
         }
 
         float left() const { return x; }
@@ -74,7 +88,7 @@ namespace cgame
         Surface(SDL_Renderer* _renderer, SDL_Texture* _existing)
             : renderer(_renderer), surfaceTex(_existing), width(_existing->w), height(_existing->h), x(0), y(0)
         {
-            rect = { x, y, width, height };
+            rect = { x, y, _existing->w, _existing->h };
         }
 
         ~Surface()
@@ -95,35 +109,31 @@ namespace cgame
         {   
             x = _x;
             y = _y;
-
             SDL_Texture* previousTarget = SDL_GetRenderTarget(renderer);
             SDL_SetRenderTarget(renderer, surfaceTex);   
             SDL_SetTextureScaleMode(surface.get_surface(), SDL_SCALEMODE_NEAREST);
-            SDL_FRect dst = { x, y, surface.get_width(), surface.get_height() };
+            SDL_FRect dst = { _x, _y, surface.get_width(), surface.get_height() };
             SDL_RenderTexture(renderer, surface.get_surface(), NULL, &dst);
             SDL_SetRenderTarget(renderer, previousTarget);
         }
 
-        void blit(Surface& surface, Rect rect)
+        void blit(Surface& surface, Rect _rect)
         {
-            blit(surface, rect.x, rect.y);
+            blit(surface, _rect.x, _rect.y);
         }
 
-        void set_width(float _width) 
-        { 
-            width = _width;  
-            rect.w = _width;
-        }
-        void set_height(float _height) 
-        { 
-            height = _height;
-            rect.h = _height; 
-        }
+        void set_width(float _width) { rect.w = _width; }
+        void set_height(float _height) { rect.h = _height; }
 
         SDL_Texture* get_surface() const { return surfaceTex; }
-        float get_width() { return width; }
-        float get_height() { return height; }
-        Rect get_rect(float _x = 0, float _y = 0) const { return { _x, _y, rect.w, rect.y }; }
+        float get_width() const { return rect.w; }
+        float get_height() const { return rect.h; }
+        Rect get_rect(float _x = 0, float _y = 0)
+        {
+            rect.x = _x;
+            rect.y = _y;
+            return rect;
+        }
 
     private:
         SDL_Renderer* renderer; 
@@ -267,6 +277,16 @@ namespace cgame
     void quit()
     {
         SDL_Quit();
+    }
+
+    namespace mouse
+    {
+        Vec2 get_pos()
+        {
+            float mx, my;
+            SDL_GetMouseState(&mx, &my);
+            return { mx, my };
+        }
     }
 
     enum EventType
