@@ -221,6 +221,7 @@ namespace cgame
         }
 
         SDL_Renderer* get_renderer() { return m_renderer; }
+        SDL_Window* get_window() { return m_window; }
         int get_width() { return m_width; }
         int get_height() { return m_height; }
         std::string get_title() { return m_title; }
@@ -233,6 +234,40 @@ namespace cgame
         int m_width, m_height;
         std::string m_title;
     };
+
+    namespace display
+    {
+        static Window* window = nullptr;
+
+        Window set_mode(int width, int height)
+        {
+            window = new Window(width, height, "cgame window");
+            return *window;
+        }
+
+        void set_caption(std::string caption)
+        {
+            if (window)
+            {
+                window->set_title(caption);
+            }
+        }
+
+        int get_width()
+        {
+            return window->get_width();
+        }
+
+        int get_height()
+        {
+            return window->get_height();
+        }
+
+        Vec2 get_size()
+        {
+            return { window->get_width(), window->get_height() };
+        }
+    }
 
     class Clock {
     public:

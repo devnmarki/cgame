@@ -4,4 +4,6 @@ rotate images
 load fonts
 render text
 
+draw rects
+
 load and play sounds

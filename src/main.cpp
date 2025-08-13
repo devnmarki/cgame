@@ -11,15 +11,15 @@ int main(int argc, char* argv[])
 {
     cgame::init();
 
-    cgame::Window window(1280, 720, "CGame example");
+    cgame::Window screen = cgame::display::set_mode(1280, 720);
     cgame::Clock clock;
 
-    cgame::Surface display(window.get_renderer(), window.get_width() / 2, window.get_height() / 2);
+    cgame::Surface display(screen.get_renderer(), screen.get_width() / 2, screen.get_height() / 2);
     
-    cgame::Surface playerImage = cgame::image::load(window.get_renderer(), "assets/images/player.png");
+    cgame::Surface playerImage = cgame::image::load(screen.get_renderer(), "assets/images/player.png");
     cgame::Rect playerRect = playerImage.get_rect(100, 50);
     
-    cgame::Surface blueBox(window.get_renderer(), 50, 100);
+    cgame::Surface blueBox(screen.get_renderer(), 50, 100);
     blueBox.fill({ 0, 0, 255 });
     cgame::Rect blueBoxRect = blueBox.get_rect(400, 50);
 
@@ -55,7 +55,7 @@ int main(int argc, char* argv[])
             }
         }
 
-        window.begin_frame();
+        screen.begin_frame();
 
         display.fill({ 0, 255, 0 });
 
@@ -75,13 +75,13 @@ int main(int argc, char* argv[])
         display.blit(playerImage, playerRect);
         display.blit(blueBox, 400, 50);
         
-        window.blit(cgame::transform::scale(display, window.get_width(), window.get_height()), 0, 0);
+        screen.blit(cgame::transform::scale(display, screen.get_width(), screen.get_height()), 0, 0);
 
-        window.end_frame();
+        screen.end_frame();
 
         std::ostringstream ss;
         ss << std::fixed << std::setprecision(0) << clock.getFPS();
-        window.set_title(("CGame but fast | FPS: " + ss.str()).c_str());
+        screen.set_title(("CGame but fast | FPS: " + ss.str()).c_str());
 
         float dt = clock.tick(60);
     }
