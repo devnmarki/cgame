@@ -9,20 +9,20 @@
 
 int main(int argc, char* argv[]) 
 {
-    if (!SDL_Init(SDL_INIT_VIDEO)) 
-    {
-        std::cerr << "Failed to initialize SDL. " << SDL_GetError() << std::endl;
-    }
+    cgame::init();
 
     cgame::Window window(1280, 720, "CGame example");
     cgame::Clock clock;
-    
-    
-    cgame::Surface blueBox(50, 100);
-    blueBox.fill({0, 0, 255, 255});
 
-    cgame::Surface testImg = cgame::loadImage("assets/images/player.png");
-    cgame::Rect testImgRect = testImg.getRect(100, 400);
+    cgame::Surface display(window.get_renderer(), window.get_width() / 2, window.get_height() / 2);
+
+    cgame::Surface playerImage = cgame::image::load(window.get_renderer(), "assets/images/player.png");
+
+    cgame::Surface blueBox(window.get_renderer(), 50, 100);
+    blueBox.fill({ 0, 0, 255 });
+
+    float x = 50;
+    bool movement = false;
 
     bool running = true;
     
@@ -39,20 +39,33 @@ int main(int argc, char* argv[])
             {
                 if (e.key == SDLK_ESCAPE)
                     running = false;
+                if (e.key == SDLK_D)
+                    movement = true;
+            }
+            if (e.type == cgame::KEYUP)
+            {
+                if (e.key == SDLK_D)
+                    movement = false;
             }
         }
 
-        window.fill({255, 0, 0, 255});
+        window.begin_frame();
+
+        display.fill({ 0, 255, 0 });
+
+        x += movement * 3;
+
+        display.blit(playerImage, x, 100);
+        display.blit(blueBox, 0, 0);
+        
+        window.blit(cgame::transform::scale(display, window.get_width(), window.get_height()), 0, 0);
+
+        window.end_frame();
 
         std::ostringstream ss;
         ss << std::fixed << std::setprecision(0) << clock.getFPS();
-        window.setTitle(("CGame example | FPS: " + ss.str()).c_str());
+        window.set_title(("CGame but fast | FPS: " + ss.str()).c_str());
 
-        testImgRect.set_left(testImgRect.left() + 1);
-        window.blit(blueBox, 100, 200);
-        window.blit(testImg, testImgRect, testImg.getWidth() * 4, testImg.getHeight() * 4);
-
-        window.update();
         float dt = clock.tick(60);
     }
 

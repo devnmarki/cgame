@@ -15,235 +15,163 @@ namespace cgame
         Uint8 r;
         Uint8 g;
         Uint8 b;
-        Uint8 a;
+        Uint8 a = 255;
     };
 
-    struct Rect
+    void init()
     {
-        int x, y, w, h;
-
-        Rect() : x(0), y(0), w(0), h(0) { }
-        Rect(int _x, int _y, int _w, int _h) : x(_x), y(_y), w(_w), h(_h) { }
-
-        Rect copy()
+        if (!SDL_Init(SDL_INIT_VIDEO)) 
         {
-            return { x, y, w, h };
+            std::cerr << "Failed to initialize SDL. " << SDL_GetError() << std::endl;
         }
-
-        bool colliderrect(const Rect &other)
-        {
-            return !(x + w <= other.x || other.x + other.w <= x ||
-                 y + h <= other.y || other.y + other.h <= y);
-        }
-
-        SDL_Rect to_sdl() const 
-        {
-            return SDL_Rect{x, y, w, h};
-        }
-
-        int left() const { return x; }
-        int right() const { return x + w; }
-        int top() const { return y; }
-        int bottom() const { return y + h; }
-        int centerx() const { return x + w / 2; }
-        int centery() const { return y + h / 2; }
-        std::pair<int,int> center() const { return {centerx(), centery()}; }
-
-        void set_left(int val) { x = val; }
-        void set_right(int val) { x = val - w; }
-        void set_top(int val) { y = val; }
-        void set_bottom(int val) { y = val - h; }
-        void set_centerx(int val) { x = val - w / 2; }
-        void set_centery(int val) { y = val - h / 2; }
-        void set_center(int cx, int cy) 
-        {
-            set_centerx(cx);
-            set_centery(cy);
-        }
-    };
-
-    class Surface
-    {
-    public:
-        Surface(int _width, int _height)
-            : width(_width), height(_height), x(0), y(0)
-        {
-            rect = { x, y, width, height };
-            surface = SDL_CreateSurface(width, height, SDL_PIXELFORMAT_RGBA8888);
-        }
-
-        Surface(SDL_Surface* existing)
-        {
-            surface = existing;
-            width = existing->w;
-            height = existing->h;
-            x = 0;
-            y = 0;
-            rect = { x, y, width, height };
-        }
-
-        ~Surface()
-        {
-            if (surface)
-                SDL_DestroySurface(surface);
-        }
-
-        void fill(Color color)
-        {
-            SDL_FillSurfaceRect(surface, NULL,
-                SDL_MapSurfaceRGB(surface, color.r, color.g, color.b));
-        }
-
-        void blit(Surface &surf, float x, float y, int w = -1, int h = -1)
-        {
-            SDL_Rect dstRect;
-            dstRect.x = static_cast<int>(x);
-            dstRect.y = static_cast<int>(y);
-            dstRect.w = (w == -1) ? surf.getWidth() : w;
-            dstRect.h = (h == -1) ? surf.getHeight() : h;
-            
-            SDL_BlitSurfaceScaled(surf.surface, NULL, surface, &dstRect, SDL_SCALEMODE_NEAREST);
-        }
-
-        void blit(Surface &surf, Rect rect, int w = -1, int h = -1)
-        {
-            SDL_Rect dstRect;
-            dstRect.x = static_cast<int>(rect.x);
-            dstRect.y = static_cast<int>(rect.y);
-            dstRect.w = (w == -1) ? surf.getWidth() : w;
-            dstRect.h = (h == -1) ? surf.getHeight() : h;
-            
-            SDL_BlitSurfaceScaled(surf.surface, NULL, surface, &dstRect, SDL_SCALEMODE_NEAREST);
-        }
-
-        void setWidth(int _width)
-        {
-            width = _width;
-            rect.w = _width;
-        }
-
-        void setHeight(int _height)
-        {
-            height = _height;
-            rect.h = _height;
-        }
-
-        void setPosition(int _x, int _y)
-        {
-            x = _x;
-            y = _y;
-            rect.x = _x;
-            rect.y = _y;
-        }
-
-        int getX() const { return x; }
-        int getY() const { return y; }
-        int getWidth() const { return width; }
-        int getHeight() const { return height; }
-
-        Rect getRect(int x = 0, int y = 0) const
-        {
-            return { x, y, rect.w, rect.h };
-        }
-
-        SDL_Surface* getSurface() const
-        {
-            return surface;
-        }
-
-    private:
-        SDL_Surface* surface;
-        int x, y;
-        int width, height;
-        Rect rect;
-    };
-
-
-    Surface loadImage(const char* filePath)
-    {
-        SDL_Surface* img = IMG_Load(filePath);
-        if (!img)
-        {
-            std::cerr << "Failed to load image. Error: " << filePath << SDL_GetError() << std::endl;
-            return Surface(0, 0);
-        }
-
-        return Surface(img);
     }
-
-    class Window 
-    {
-    public:
-        Window(int _width, int _height, const char* _title)
-            : width(_width), height(_height), title(_title)
-        {
-            window = SDL_CreateWindow(title, width, height, 0);
-            if (window == NULL)
-            {
-                std::cerr << "Failed to create window. Error: " << SDL_GetError() << std::endl;
-            }
-
-            renderer = SDL_CreateRenderer(window, NULL);
-            if (renderer == NULL)
-            {
-                std::cerr << "Failed to create renderer. Error: " << SDL_GetError() << std::endl;
-            }
-
-            screenSurface = new Surface(width, height);
-            texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, width, height);
-        }   
-        
-        ~Window()
-        {
-            delete screenSurface;
-            SDL_DestroyWindow(window);
-            SDL_DestroyRenderer(renderer);
-        }
-
-        void fill(Color color)
-        {
-            screenSurface->fill(color);
-        }
-
-        void blit(Surface& surface, int x, int y, int w = -1, int h = -1)
-        {
-            screenSurface->blit(surface, x, y, w, h);
-        }
-
-        void blit(Surface& surface, Rect rect, int w = -1, int h = -1)
-        {
-            screenSurface->blit(surface, rect, w, h);
-        }
-
-        void update()
-        {
-            SDL_SetWindowTitle(window, title);
-
-            SDL_UpdateTexture(texture, NULL, screenSurface->getSurface()->pixels, screenSurface->getSurface()->pitch);
-            SDL_RenderClear(renderer);
-            SDL_RenderTexture(renderer, texture, NULL, NULL);
-            SDL_RenderPresent(renderer);
-        }
-
-        void setTitle(const char* _title)
-        {
-            title = _title;
-        }
-
-    private:
-        SDL_Window* window;
-        SDL_Renderer* renderer;    
-        Surface* screenSurface;    
-        SDL_Texture* texture;
-
-        int width, height;
-        const char* title;
-    };
 
     void quit()
     {
         SDL_Quit();
     }
+
+    class Surface
+    {
+    public:
+        Surface(SDL_Renderer* _renderer, float _width, float _height)
+            : renderer(_renderer), width(_width), height(_height)
+        {
+            surfaceTex = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, width, height);
+        }
+
+        Surface(SDL_Renderer* _renderer, SDL_Texture* _existing)
+            : renderer(_renderer), surfaceTex(_existing), width(_existing->w), height(_existing->h)
+        {
+            
+        }
+
+        ~Surface()
+        {
+            SDL_DestroyTexture(surfaceTex);
+        }
+
+        void fill(Color color = { 0, 0, 0, 255 })
+        {
+            SDL_Texture* oldTarget = SDL_GetRenderTarget(renderer);
+            SDL_SetRenderTarget(renderer, surfaceTex);
+            SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
+            SDL_RenderClear(renderer);
+            SDL_SetRenderTarget(renderer, oldTarget);
+        }
+
+        void blit(Surface& surface, float x, float y)
+        {
+            SDL_Texture* previousTarget = SDL_GetRenderTarget(renderer);
+            SDL_SetRenderTarget(renderer, surfaceTex);   
+            SDL_SetTextureScaleMode(surface.get_surface(), SDL_SCALEMODE_NEAREST);
+            SDL_FRect dst = { x, y, surface.get_width(), surface.get_height() };
+            SDL_RenderTexture(renderer, surface.get_surface(), NULL, &dst);
+            SDL_SetRenderTarget(renderer, previousTarget);
+        }
+
+        void set_width(float _width) { width = _width; }
+        void set_height(float _height) { height = _height; }
+
+        float get_width() { return width; }
+        float get_height() { return height; }
+        SDL_Texture* get_surface() { return surfaceTex; }
+
+    private:
+        SDL_Renderer* renderer; 
+        SDL_Texture* surfaceTex; 
+        float width, height;       
+    };
+
+    namespace transform
+    {
+        Surface& scale(Surface& surface, float newWidth, float newHeight)
+        {
+            surface.set_width(newWidth);
+            surface.set_height(newHeight);
+            return surface;
+        }
+    }
+
+    namespace image
+    {
+        Surface load(SDL_Renderer* renderer, std::string filePath)
+        {
+            SDL_Texture* imgTex = IMG_LoadTexture(renderer, filePath.c_str());
+            if (imgTex == NULL)
+            {
+                std::cerr << "Failed to load image " << filePath << " Error: " << SDL_GetError() << std::endl;
+            }
+    
+            return Surface(renderer, imgTex);
+        }
+    }
+
+    class Window
+    {
+    public:
+        Window(int width, int height, std::string title)
+            : m_width(width), m_height(height), m_title(title)
+        {
+            m_window = SDL_CreateWindow(title.c_str(), width, height, 0);
+            if (m_window == NULL)
+            {
+                std::cerr << "Failed to create window. Error: " << SDL_GetError() << std::endl;
+            }
+
+            m_renderer = SDL_CreateRenderer(m_window, NULL);
+            if (m_renderer == NULL)
+            {
+                std::cerr << "Failed to create renderer. Error: " << SDL_GetError() << std::endl;
+            }
+
+            screenSurface = new Surface(m_renderer, m_width, m_height);
+        }
+
+        ~Window()
+        {
+            delete screenSurface;
+            SDL_DestroyRenderer(m_renderer);
+            SDL_DestroyWindow(m_window);
+        }
+
+        void begin_frame(Color color = { 0, 0, 0, 255 })
+        {
+            SDL_SetRenderDrawColor(m_renderer, color.r, color.g, color.b, color.a);
+            SDL_RenderClear(m_renderer);
+
+            SDL_FRect dst = { 0, 0, screenSurface->get_width(), screenSurface->get_height() };
+            SDL_RenderTexture(m_renderer, screenSurface->get_surface(), NULL, &dst);
+        }
+
+        void blit(Surface& surface, float x, float y)
+        {
+            screenSurface->blit(surface, x, y);
+        }
+
+        void end_frame()
+        {
+            SDL_RenderPresent(m_renderer);
+        }
+
+        void set_title(std::string title)
+        {
+            SDL_SetWindowTitle(m_window, title.c_str());
+        }
+
+        SDL_Renderer* get_renderer() { return m_renderer; }
+        int get_width() { return m_width; }
+        int get_height() { return m_height; }
+        std::string get_title() { return m_title; }
+
+    private:
+        SDL_Renderer* m_renderer;
+        SDL_Window* m_window;
+        Surface* screenSurface;
+
+        int m_width, m_height;
+        std::string m_title;
+    };
 
     class Clock {
     public:
