@@ -1,0 +1,7 @@
+flip images
+rotate images
+
+load fonts
+render text
+
+load and play sounds
