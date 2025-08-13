@@ -17,6 +17,7 @@ int main(int argc, char* argv[])
     cgame::Surface display(window.get_renderer(), window.get_width() / 2, window.get_height() / 2);
 
     cgame::Surface playerImage = cgame::image::load(window.get_renderer(), "assets/images/player.png");
+    cgame::Rect playerRect = playerImage.get_rect(100, 50);
 
     cgame::Surface blueBox(window.get_renderer(), 50, 100);
     blueBox.fill({ 0, 0, 255 });
@@ -53,10 +54,10 @@ int main(int argc, char* argv[])
 
         display.fill({ 0, 255, 0 });
 
-        x += movement * 3;
+        playerRect.set_left(playerRect.left() + movement * 3);
 
-        display.blit(playerImage, x, 100);
-        display.blit(blueBox, 0, 0);
+        display.blit(playerImage, playerRect);
+        display.blit(blueBox, 300, 0);
         
         window.blit(cgame::transform::scale(display, window.get_width(), window.get_height()), 0, 0);
 

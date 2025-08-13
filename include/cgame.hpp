@@ -18,32 +18,63 @@ namespace cgame
         Uint8 a = 255;
     };
 
-    void init()
+    struct Rect
     {
-        if (!SDL_Init(SDL_INIT_VIDEO)) 
-        {
-            std::cerr << "Failed to initialize SDL. " << SDL_GetError() << std::endl;
-        }
-    }
+        float x, y, w, h;
 
-    void quit()
-    {
-        SDL_Quit();
-    }
+        Rect() : x(0), y(0), w(0), h(0) { }
+        Rect(float _x, float _y, float _w, float _h) : x(_x), y(_y), w(_w), h(_h) { } 
+
+        Rect copy()
+        {
+            return { x, y, w, h };
+        }
+
+        SDL_FRect to_sdl()
+        {
+            return { x, y, w, h };
+        }
+
+        bool colliderect(const Rect &other)
+        {
+            return !(x + w <= other.x || other.x + other.w <= x || y + h <= other.y || other.y + other.h <= y);
+        }
+
+        float left() const { return x; }
+        float right() const { return x + w; }
+        float top() const { return y; }
+        float bottom() const { return y + h; }
+        float centerx() const { return x + w / 2; }
+        float centery() const { return y + h / 2; }
+        std::pair<float, float> center() const { return {centerx(), centery()}; }
+
+        void set_left(float val) { x = val; }
+        void set_right(float val) { x = val - w; }
+        void set_top(float val) { y = val; }
+        void set_bottom(float val) { y = val - h; }
+        void set_centerx(float val) { x = val - w / 2; }
+        void set_centery(float val) { y = val - h / 2; }
+        void set_center(float cx, float cy) 
+        {
+            set_centerx(cx);
+            set_centery(cy);
+        }
+    };
 
     class Surface
     {
     public:
         Surface(SDL_Renderer* _renderer, float _width, float _height)
-            : renderer(_renderer), width(_width), height(_height)
+            : renderer(_renderer), width(_width), height(_height), x(0), y(0)
         {
             surfaceTex = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, width, height);
+            rect = { x, y, width, height };
         }
 
         Surface(SDL_Renderer* _renderer, SDL_Texture* _existing)
-            : renderer(_renderer), surfaceTex(_existing), width(_existing->w), height(_existing->h)
+            : renderer(_renderer), surfaceTex(_existing), width(_existing->w), height(_existing->h), x(0), y(0)
         {
-            
+            rect = { x, y, width, height };
         }
 
         ~Surface()
@@ -60,8 +91,11 @@ namespace cgame
             SDL_SetRenderTarget(renderer, oldTarget);
         }
 
-        void blit(Surface& surface, float x, float y)
-        {
+        void blit(Surface& surface, float _x, float _y)
+        {   
+            x = _x;
+            y = _y;
+
             SDL_Texture* previousTarget = SDL_GetRenderTarget(renderer);
             SDL_SetRenderTarget(renderer, surfaceTex);   
             SDL_SetTextureScaleMode(surface.get_surface(), SDL_SCALEMODE_NEAREST);
@@ -70,17 +104,34 @@ namespace cgame
             SDL_SetRenderTarget(renderer, previousTarget);
         }
 
-        void set_width(float _width) { width = _width; }
-        void set_height(float _height) { height = _height; }
+        void blit(Surface& surface, Rect rect)
+        {
+            blit(surface, rect.x, rect.y);
+        }
 
+        void set_width(float _width) 
+        { 
+            width = _width;  
+            rect.w = _width;
+        }
+        void set_height(float _height) 
+        { 
+            height = _height;
+            rect.h = _height; 
+        }
+
+        SDL_Texture* get_surface() const { return surfaceTex; }
         float get_width() { return width; }
         float get_height() { return height; }
-        SDL_Texture* get_surface() { return surfaceTex; }
+        Rect get_rect(float _x = 0, float _y = 0) const { return { _x, _y, rect.w, rect.y }; }
 
     private:
         SDL_Renderer* renderer; 
         SDL_Texture* surfaceTex; 
-        float width, height;       
+        
+        float x, y;
+        float width, height;      
+        Rect rect; 
     };
 
     namespace transform
@@ -205,6 +256,18 @@ namespace cgame
         float currentFPS = 0.0f;
     };
 
+    void init()
+    {
+        if (!SDL_Init(SDL_INIT_VIDEO)) 
+        {
+            std::cerr << "Failed to initialize SDL. " << SDL_GetError() << std::endl;
+        }
+    }
+
+    void quit()
+    {
+        SDL_Quit();
+    }
 
     enum EventType
     {

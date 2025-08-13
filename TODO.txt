@@ -1,0 +1,10 @@
+flip images
+rotate images
+
+rect-rect collision
+point-rect collision
+
+load fonts
+render text
+
+load and play sounds
