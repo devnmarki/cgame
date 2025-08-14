@@ -1,9 +1,10 @@
 flip images
 rotate images
+add spritesheets
 
 load fonts
 render text
 
-draw rects
-
 load and play sounds
+
+add rng like python's random library

@@ -39,7 +39,7 @@ namespace cgame
             return { x, y, w, h };
         }
 
-        SDL_FRect to_sdl()
+        SDL_FRect to_sdl() const
         {
             return { x, y, w, h };
         }
@@ -267,6 +267,34 @@ namespace cgame
         {
             return { window->get_width(), window->get_height() };
         }
+
+        SDL_Renderer* get_renderer()
+        {
+            return window->get_renderer();
+        }
+    }
+
+    namespace draw
+    {
+        void rect(Surface& surface, Rect rect, Color color = { 0, 0, 0, 255 })
+        {
+            SDL_Texture* prevTarget = SDL_GetRenderTarget(display::get_renderer());
+            SDL_SetRenderTarget(display::get_renderer(), surface.get_surface());
+            SDL_SetRenderDrawColor(display::get_renderer(), color.r, color.g, color.b, color.a);
+            SDL_FRect sdlRect = rect.to_sdl();
+            SDL_RenderRect(display::get_renderer(), &sdlRect);
+            SDL_SetRenderTarget(display::get_renderer(), prevTarget);
+        }
+
+        void fillRect(Surface& surface, Rect rect, Color color = { 0, 0, 0, 255 })
+        {
+            SDL_Texture* prevTarget = SDL_GetRenderTarget(display::get_renderer());
+            SDL_SetRenderTarget(display::get_renderer(), surface.get_surface());
+            SDL_SetRenderDrawColor(display::get_renderer(), color.r, color.g, color.b, color.a);
+            SDL_FRect sdlRect = rect.to_sdl();
+            SDL_RenderFillRect(display::get_renderer(), &sdlRect);
+            SDL_SetRenderTarget(display::get_renderer(), prevTarget);
+        }
     }
 
     class Clock {
@@ -294,7 +322,7 @@ namespace cgame
             return delta;
         }
 
-        float getFPS() const { return currentFPS; }
+        float get_fps() const { return currentFPS; }
 
     private:
         Uint32 lastTick;

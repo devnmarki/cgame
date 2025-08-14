@@ -72,6 +72,8 @@ int main(int argc, char* argv[])
 
         playerRect.set_left(playerRect.left() + (movement[1] - movement[0]) * 3);
 
+        cgame::draw::rect(display, playerRect, { 255, 0, 0 });
+
         display.blit(playerImage, playerRect);
         display.blit(blueBox, 400, 50);
         
@@ -80,7 +82,7 @@ int main(int argc, char* argv[])
         screen.end_frame();
 
         std::ostringstream ss;
-        ss << std::fixed << std::setprecision(0) << clock.getFPS();
+        ss << std::fixed << std::setprecision(0) << clock.get_fps();
         screen.set_title(("CGame but fast | FPS: " + ss.str()).c_str());
 
         float dt = clock.tick(60);
