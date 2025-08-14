@@ -58,7 +58,7 @@ namespace cgame
 
         bool collidepoint(float px, float py)
         {
-                return (px >= x && px <= x + w && py >= y && py <= y + h);
+            return (px >= x && px <= x + w && py >= y && py <= y + h);
         }
 
         float left() const { return x; }
@@ -116,11 +116,15 @@ namespace cgame
         {   
             x = _x;
             y = _y;
+
+            SDL_FPoint center = { width / 2, height / 2 };
+            SDL_FRect dst = { _x, _y, surface.get_width(), surface.get_height() };
+            SDL_FlipMode flipMode = surface.is_flip() ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE;
+
             SDL_Texture* previousTarget = SDL_GetRenderTarget(renderer);
             SDL_SetRenderTarget(renderer, surfaceTex);   
             SDL_SetTextureScaleMode(surface.get_surface(), SDL_SCALEMODE_NEAREST);
-            SDL_FRect dst = { _x, _y, surface.get_width(), surface.get_height() };
-            SDL_RenderTexture(renderer, surface.get_surface(), NULL, &dst);
+            SDL_RenderTextureRotated(renderer, surface.get_surface(), NULL, &dst, surface.get_rotation(), NULL, flipMode);
             SDL_SetRenderTarget(renderer, previousTarget);
         }
 
@@ -131,10 +135,14 @@ namespace cgame
 
         void set_width(float _width) { rect.w = _width; }
         void set_height(float _height) { rect.h = _height; }
+        void set_rotation(float _rotation) { rotation = _rotation; }
+        void set_flip(bool _flip) { flip = _flip; }
 
         SDL_Texture* get_surface() const { return surfaceTex; }
         float get_width() const { return rect.w; }
         float get_height() const { return rect.h; }
+        float get_rotation() const { return rotation; }
+        bool is_flip() const { return flip; }
         Rect get_rect(float _x = 0, float _y = 0)
         {
             rect.x = _x;
@@ -148,6 +156,8 @@ namespace cgame
         
         float x, y;
         float width, height;      
+        float rotation = 0.0f;
+        bool flip;
         Rect rect; 
     };
 
@@ -157,6 +167,18 @@ namespace cgame
         {
             surface.set_width(newWidth);
             surface.set_height(newHeight);
+            return surface;
+        }
+
+        Surface& rotate(Surface& surface, float newRotation)
+        {
+            surface.set_rotation(newRotation);
+            return surface;
+        }
+
+        Surface& flip(Surface& surface, bool flip)
+        {
+            surface.set_flip(flip);
             return surface;
         }
     }

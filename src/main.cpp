@@ -17,11 +17,11 @@ int main(int argc, char* argv[])
     cgame::Surface display(screen.get_renderer(), screen.get_width() / 2, screen.get_height() / 2);
     
     cgame::Surface playerImage = cgame::image::load(screen.get_renderer(), "assets/images/player.png");
-    cgame::Rect playerRect = playerImage.get_rect(100, 50);
+    cgame::Rect playerRect = playerImage.get_rect(100, 150);
     
     cgame::Surface blueBox(screen.get_renderer(), 50, 100);
     blueBox.fill({ 0, 0, 255 });
-    cgame::Rect blueBoxRect = blueBox.get_rect(400, 50);
+    cgame::Rect blueBoxRect = blueBox.get_rect(400, 80);
 
     cgame::font::Font testFont = cgame::font::Font("assets/fonts/MedodicaRegular.otf", 24);
 
@@ -35,6 +35,7 @@ int main(int argc, char* argv[])
 
     float x = 50;
     int movement[2] = { false, false };
+    float rot = 0.0f;
 
     bool running = true;
     
@@ -86,8 +87,9 @@ int main(int argc, char* argv[])
 
         cgame::Surface text = testFont.render("Hello World!", { 255, 255, 255 });
 
-        display.blit(playerImage, playerRect);
-        display.blit(blueBox, 400, 50);
+        rot++;
+        display.blit(cgame::transform::rotate(cgame::transform::flip(playerImage, true), rot), playerRect);
+        display.blit(blueBox, blueBoxRect);
         display.blit(text, 50, 50);
         
         screen.blit(cgame::transform::scale(display, screen.get_width(), screen.get_height()), 0, 0);
