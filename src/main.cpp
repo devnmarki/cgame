@@ -25,6 +25,14 @@ int main(int argc, char* argv[])
 
     cgame::font::Font testFont = cgame::font::Font("assets/fonts/MedodicaRegular.otf", 24);
 
+    int randomInteger = cgame::random::randint(5, 10);
+    float randomFloat = cgame::random::random();
+    float randomFloatRange = cgame::random::uniform(5, 10);
+
+    std::cout << "randint: " << randomInteger << std::endl;
+    std::cout << "random: " << randomFloat << std::endl;
+    std::cout << "random range: " << randomFloatRange << std::endl;
+
     float x = 50;
     int movement[2] = { false, false };
 

@@ -1,6 +1,8 @@
 #pragma once
 
 #include <iostream>
+#include <vector>
+#include <random>
 
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_image.h>
@@ -91,9 +93,9 @@ namespace cgame
         }
 
         Surface(SDL_Renderer* _renderer, SDL_Texture* _existing)
-            : renderer(_renderer), surfaceTex(_existing), width(_existing->w), height(_existing->h), x(0), y(0)
+            : renderer(_renderer), surfaceTex(_existing), width((float)_existing->w), height((float)_existing->h), x(0), y(0)
         {
-            rect = { x, y, _existing->w, _existing->h };
+            rect = { x, y, (float)_existing->w, (float)_existing->h };
         }
 
         ~Surface()
@@ -270,7 +272,7 @@ namespace cgame
 
         Vec2 get_size()
         {
-            return { window->get_width(), window->get_height() };
+            return { (float)window->get_width(), (float)window->get_height() };
         }
 
         SDL_Renderer* get_renderer()
@@ -338,6 +340,34 @@ namespace cgame
         private:
             SDL_Texture* surfaceTex = NULL;
         };
+    }
+
+    namespace random
+    {
+        static std::mt19937 rng(std::random_device{}());
+
+        void seed(unsigned int s)
+        {
+            rng.seed(s);
+        }
+
+        float random() 
+        {
+            std::uniform_real_distribution<float> dist(0.0f, 1.0f);
+            return dist(rng);
+        }
+
+        float uniform(float a, float b)
+        {
+            std::uniform_real_distribution<float> dist(a, b);
+            return dist(rng);
+        }
+
+        int randint(int a, int b)
+        {
+            std::uniform_int_distribution<int> dist(a, b);
+            return dist(rng);
+        }
     }
 
     class Clock {
