@@ -4,7 +4,7 @@ OUTPUT_DIR = build
 INCLUDE_DIRS = -Iinc
 LIB_DIRS = -Llib
 
-LIBS = -lmingw32 -lSDL3 -lSDL3_image
+LIBS = -lmingw32 -lSDL3 -lSDL3_image -lSDL3_ttf
 
 SRC = $(wildcard src/*.cpp)
 

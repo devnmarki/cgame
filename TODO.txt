@@ -1,7 +1,4 @@
 flip images
-rotate images
-
-load fonts
-render text
+add spritesheets
 
 load and play sounds

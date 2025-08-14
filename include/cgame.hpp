@@ -1,10 +1,12 @@
 #pragma once
 
 #include <iostream>
-#include <tuple>
+#include <vector>
+#include <random>
 
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_image.h>
+#include <SDL3/SDL_ttf.h>
 
 #ifndef CGAME_HPP
 #define CGAME_HPP
@@ -17,6 +19,11 @@ namespace cgame
         Uint8 g;
         Uint8 b;
         Uint8 a = 255;
+
+        SDL_Color to_sdl()
+        {
+            return { r, g, b, a };
+        }
     };
 
     struct Vec2
@@ -39,7 +46,7 @@ namespace cgame
             return { x, y, w, h };
         }
 
-        SDL_FRect to_sdl()
+        SDL_FRect to_sdl() const
         {
             return { x, y, w, h };
         }
@@ -51,7 +58,7 @@ namespace cgame
 
         bool collidepoint(float px, float py)
         {
-                return (px >= x && px <= x + w && py >= y && py <= y + h);
+            return (px >= x && px <= x + w && py >= y && py <= y + h);
         }
 
         float left() const { return x; }
@@ -86,9 +93,9 @@ namespace cgame
         }
 
         Surface(SDL_Renderer* _renderer, SDL_Texture* _existing)
-            : renderer(_renderer), surfaceTex(_existing), width(_existing->w), height(_existing->h), x(0), y(0)
+            : renderer(_renderer), surfaceTex(_existing), width((float)_existing->w), height((float)_existing->h), x(0), y(0)
         {
-            rect = { x, y, _existing->w, _existing->h };
+            rect = { x, y, (float)_existing->w, (float)_existing->h };
         }
 
         ~Surface()
@@ -109,11 +116,15 @@ namespace cgame
         {   
             x = _x;
             y = _y;
+
+            SDL_FPoint center = { width / 2, height / 2 };
+            SDL_FRect dst = { _x, _y, surface.get_width(), surface.get_height() };
+            SDL_FlipMode flipMode = surface.is_flip() ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE;
+
             SDL_Texture* previousTarget = SDL_GetRenderTarget(renderer);
             SDL_SetRenderTarget(renderer, surfaceTex);   
             SDL_SetTextureScaleMode(surface.get_surface(), SDL_SCALEMODE_NEAREST);
-            SDL_FRect dst = { _x, _y, surface.get_width(), surface.get_height() };
-            SDL_RenderTexture(renderer, surface.get_surface(), NULL, &dst);
+            SDL_RenderTextureRotated(renderer, surface.get_surface(), NULL, &dst, surface.get_rotation(), NULL, flipMode);
             SDL_SetRenderTarget(renderer, previousTarget);
         }
 
@@ -124,10 +135,14 @@ namespace cgame
 
         void set_width(float _width) { rect.w = _width; }
         void set_height(float _height) { rect.h = _height; }
+        void set_rotation(float _rotation) { rotation = _rotation; }
+        void set_flip(bool _flip) { flip = _flip; }
 
         SDL_Texture* get_surface() const { return surfaceTex; }
         float get_width() const { return rect.w; }
         float get_height() const { return rect.h; }
+        float get_rotation() const { return rotation; }
+        bool is_flip() const { return flip; }
         Rect get_rect(float _x = 0, float _y = 0)
         {
             rect.x = _x;
@@ -141,6 +156,8 @@ namespace cgame
         
         float x, y;
         float width, height;      
+        float rotation = 0.0f;
+        bool flip;
         Rect rect; 
     };
 
@@ -150,6 +167,18 @@ namespace cgame
         {
             surface.set_width(newWidth);
             surface.set_height(newHeight);
+            return surface;
+        }
+
+        Surface& rotate(Surface& surface, float newRotation)
+        {
+            surface.set_rotation(newRotation);
+            return surface;
+        }
+
+        Surface& flip(Surface& surface, bool flip)
+        {
+            surface.set_flip(flip);
             return surface;
         }
     }
@@ -221,6 +250,7 @@ namespace cgame
         }
 
         SDL_Renderer* get_renderer() { return m_renderer; }
+        SDL_Window* get_window() { return m_window; }
         int get_width() { return m_width; }
         int get_height() { return m_height; }
         std::string get_title() { return m_title; }
@@ -233,6 +263,134 @@ namespace cgame
         int m_width, m_height;
         std::string m_title;
     };
+
+    namespace display
+    {
+        static Window* window = nullptr;
+
+        Window set_mode(int width, int height)
+        {
+            window = new Window(width, height, "cgame window");
+            return *window;
+        }
+
+        void set_caption(std::string caption)
+        {
+            if (window)
+            {
+                window->set_title(caption);
+            }
+        }
+
+        int get_width()
+        {
+            return window->get_width();
+        }
+
+        int get_height()
+        {
+            return window->get_height();
+        }
+
+        Vec2 get_size()
+        {
+            return { (float)window->get_width(), (float)window->get_height() };
+        }
+
+        SDL_Renderer* get_renderer()
+        {
+            return window->get_renderer();
+        }
+    }
+
+    namespace draw
+    {
+        void rect(Surface& surface, Rect rect, Color color = { 0, 0, 0, 255 })
+        {
+            SDL_Texture* prevTarget = SDL_GetRenderTarget(display::get_renderer());
+            SDL_SetRenderTarget(display::get_renderer(), surface.get_surface());
+            SDL_SetRenderDrawColor(display::get_renderer(), color.r, color.g, color.b, color.a);
+            SDL_FRect sdlRect = rect.to_sdl();
+            SDL_RenderRect(display::get_renderer(), &sdlRect);
+            SDL_SetRenderTarget(display::get_renderer(), prevTarget);
+        }
+
+        void fillRect(Surface& surface, Rect rect, Color color = { 0, 0, 0, 255 })
+        {
+            SDL_Texture* prevTarget = SDL_GetRenderTarget(display::get_renderer());
+            SDL_SetRenderTarget(display::get_renderer(), surface.get_surface());
+            SDL_SetRenderDrawColor(display::get_renderer(), color.r, color.g, color.b, color.a);
+            SDL_FRect sdlRect = rect.to_sdl();
+            SDL_RenderFillRect(display::get_renderer(), &sdlRect);
+            SDL_SetRenderTarget(display::get_renderer(), prevTarget);
+        }
+    }
+
+    namespace font
+    {
+        struct Font
+        {
+            std::string filePath;
+            float size;
+            TTF_Font* font;
+
+            Font(std::string _filePath, float _size)
+                : filePath(_filePath), size(_size)
+            {
+                font = TTF_OpenFont(filePath.c_str(), size);
+                if (!font)
+                {
+                    std::cerr << "Failed to load font " << filePath << " " << SDL_GetError() << std::endl;
+                }
+            }
+
+            ~Font()
+            {
+                if (surfaceTex)
+                    SDL_DestroyTexture(surfaceTex);
+            }
+
+            Surface render(std::string content, Color color = { 0, 0, 0, 255 })
+            {
+                SDL_Surface* fontSurface = TTF_RenderText_Solid(font, content.c_str(), 0, color.to_sdl());
+                surfaceTex = SDL_CreateTextureFromSurface(display::get_renderer(), fontSurface);
+                SDL_DestroySurface(fontSurface);
+
+                return Surface(display::get_renderer(), surfaceTex);
+            }
+
+        private:
+            SDL_Texture* surfaceTex = NULL;
+        };
+    }
+
+    namespace random
+    {
+        static std::mt19937 rng(std::random_device{}());
+
+        void seed(unsigned int s)
+        {
+            rng.seed(s);
+        }
+
+        float random() 
+        {
+            std::uniform_real_distribution<float> dist(0.0f, 1.0f);
+            return dist(rng);
+        }
+
+        float uniform(float a, float b)
+        {
+            std::uniform_real_distribution<float> dist(a, b);
+            return dist(rng);
+        }
+
+        int randint(int a, int b)
+        {
+            std::uniform_int_distribution<int> dist(a, b);
+            return dist(rng);
+        }
+    }
 
     class Clock {
     public:
@@ -259,7 +417,7 @@ namespace cgame
             return delta;
         }
 
-        float getFPS() const { return currentFPS; }
+        float get_fps() const { return currentFPS; }
 
     private:
         Uint32 lastTick;
@@ -272,10 +430,16 @@ namespace cgame
         {
             std::cerr << "Failed to initialize SDL. " << SDL_GetError() << std::endl;
         }
+
+        if (!TTF_Init())
+        {
+            std::cerr << "Failed to initialize SDL_ttf. " << SDL_GetError() << std::endl;
+        }
     }
 
     void quit()
     {
+        TTF_Quit();
         SDL_Quit();
     }
 
