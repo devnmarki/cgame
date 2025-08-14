@@ -1,10 +1,10 @@
 #pragma once
 
 #include <iostream>
-#include <tuple>
 
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_image.h>
+#include <SDL3/SDL_ttf.h>
 
 #ifndef CGAME_HPP
 #define CGAME_HPP
@@ -17,6 +17,11 @@ namespace cgame
         Uint8 g;
         Uint8 b;
         Uint8 a = 255;
+
+        SDL_Color to_sdl()
+        {
+            return { r, g, b, a };
+        }
     };
 
     struct Vec2
@@ -297,6 +302,44 @@ namespace cgame
         }
     }
 
+    namespace font
+    {
+        struct Font
+        {
+            std::string filePath;
+            float size;
+            TTF_Font* font;
+
+            Font(std::string _filePath, float _size)
+                : filePath(_filePath), size(_size)
+            {
+                font = TTF_OpenFont(filePath.c_str(), size);
+                if (!font)
+                {
+                    std::cerr << "Failed to load font " << filePath << " " << SDL_GetError() << std::endl;
+                }
+            }
+
+            ~Font()
+            {
+                if (surfaceTex)
+                    SDL_DestroyTexture(surfaceTex);
+            }
+
+            Surface render(std::string content, Color color = { 0, 0, 0, 255 })
+            {
+                SDL_Surface* fontSurface = TTF_RenderText_Solid(font, content.c_str(), 0, color.to_sdl());
+                surfaceTex = SDL_CreateTextureFromSurface(display::get_renderer(), fontSurface);
+                SDL_DestroySurface(fontSurface);
+
+                return Surface(display::get_renderer(), surfaceTex);
+            }
+
+        private:
+            SDL_Texture* surfaceTex = NULL;
+        };
+    }
+
     class Clock {
     public:
         Clock() {
@@ -335,10 +378,16 @@ namespace cgame
         {
             std::cerr << "Failed to initialize SDL. " << SDL_GetError() << std::endl;
         }
+
+        if (!TTF_Init())
+        {
+            std::cerr << "Failed to initialize SDL_ttf. " << SDL_GetError() << std::endl;
+        }
     }
 
     void quit()
     {
+        TTF_Quit();
         SDL_Quit();
     }
 
