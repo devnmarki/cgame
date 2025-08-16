@@ -26,7 +26,6 @@ int main(int argc, char* argv[])
         cgame::Rect blueBoxRect = blueBox.get_rect(400, 80);
 
         cgame::font::Font testFont = cgame::font::Font("assets/fonts/MedodicaRegular.otf", 24);
-        cgame::font::Font testFont2 = cgame::font::Font("assets/fonts/COOPBL.TTF", 32);
 
         cgame::mixer::Sound jumpSound = cgame::mixer::Sound("assets/sfx/jump.wav");
         cgame::mixer::Sound deathSound = cgame::mixer::Sound("assets/sfx/death.wav");
@@ -108,7 +107,6 @@ int main(int argc, char* argv[])
             cgame::draw::rect(display, playerRect, { 255, 0, 0 });
 
             cgame::Surface text = testFont.render("Hello World!", { 255, 255, 255 });
-            cgame::Surface text2 = testFont2.render("Matej peder", { 255, 0, 0 });
 
             playerImage.set_alpha(std::max(0.0f, 100.0f + playerRect.left()));
 
@@ -116,7 +114,6 @@ int main(int argc, char* argv[])
             display.blit(cgame::transform::rotate(cgame::transform::flip(playerImage, true), rot), playerRect);
             display.blit(blueBox, blueBoxRect);
             display.blit(text, 50, 50);
-            display.blit(text2, 400, 100);
             
             screen.blit(cgame::transform::scale(display, screen.get_width(), screen.get_height()), 0, 0);
 

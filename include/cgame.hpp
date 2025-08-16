@@ -1,3 +1,6 @@
+#ifndef CGAME_HPP
+#define CGAME_HPP
+
 #include <iostream>
 #include <random>
 #include <vector>
@@ -423,6 +426,11 @@ namespace cgame
                 }
 
                 SDL_Texture* tex = SDL_CreateTextureFromSurface(display::get_renderer(), fontSurface);
+                if (tex == NULL)
+                {
+                    std::cerr << "Failed to create texture from font surface: " << TTF_GetError() << std::endl;
+                    return Surface(display::get_renderer(), (SDL_Texture*)NULL);
+                }
                 SDL_FreeSurface(fontSurface);
 
                 return Surface(display::get_renderer(), tex);
@@ -667,3 +675,5 @@ namespace cgame
         }
     }
 }
+
+#endif
