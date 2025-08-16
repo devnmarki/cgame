@@ -1,10 +1,10 @@
-PROJECTNAME = project
+PROJECTNAME = cgame
 OUTPUT_DIR = build
 
 INCLUDE_DIRS = -Iinc
 LIB_DIRS = -Llib
 
-LIBS = -lmingw32 -lSDL3 -lSDL3_image -lSDL3_ttf
+LIBS = -lmingw32 -lSDL2main -lSDL2 -lSDL2_image -lSDL2_ttf -lSDL2_mixer
 
 SRC = $(wildcard src/*.cpp)
 
