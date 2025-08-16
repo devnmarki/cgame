@@ -199,6 +199,11 @@ namespace cgame
             SDL_SetTextureAlphaMod(surfaceTex, static_cast<Uint8>(alpha * 255.0f + 0.5f));
         }
 
+        void set_color(Color color = { 255, 255, 255 })
+        {
+            SDL_SetTextureColorMod(surfaceTex, color.r, color.g, color.b);
+        }
+
         void set_width(float _width) { rect.w = _width; }
         void set_height(float _height) { rect.h = _height; }
         void set_rotation(float _rotation) { rotation = _rotation; }

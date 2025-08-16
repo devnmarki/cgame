@@ -19,6 +19,7 @@ int main(int argc, char* argv[])
         cgame::Surface display(screen.get_renderer(), screen.get_width() / 2, screen.get_height() / 2);
         
         cgame::Surface playerImage = cgame::image::load(screen.get_renderer(), "assets/images/player.png");
+        playerImage.set_color({ 0, 0, 255 });
         cgame::Rect playerRect = playerImage.get_rect(100, 150);
         
         cgame::Surface blueBox(screen.get_renderer(), 50, 100);
