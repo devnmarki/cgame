@@ -1,6 +1,7 @@
 #include <iostream>
 #include <random>
 #include <vector>
+#include <algorithm>
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
@@ -187,6 +188,12 @@ namespace cgame
         void blit(Surface& surface, Rect _rect)
         {
             blit(surface, _rect.x, _rect.y);
+        }
+
+        void set_alpha(float alpha)
+        {
+            alpha = std::clamp(alpha, 0.0f, 255.0f) / 255.0f;
+            SDL_SetTextureAlphaMod(surfaceTex, static_cast<Uint8>(alpha * 255.0f + 0.5f));
         }
 
         void set_width(float _width) { rect.w = _width; }

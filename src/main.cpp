@@ -1,6 +1,7 @@
 #include <iostream>
 #include <sstream>
 #include <iomanip>
+#include <algorithm>
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
@@ -105,6 +106,8 @@ int main(int argc, char* argv[])
 
             cgame::Surface text = testFont.render("Hello World!", { 255, 255, 255 });
             cgame::Surface text2 = testFont2.render("Matej peder", { 255, 0, 0 });
+
+            playerImage.set_alpha(std::max(0.0f, 100.0f + playerRect.left()));
 
             rot++;
             display.blit(cgame::transform::rotate(cgame::transform::flip(playerImage, true), rot), playerRect);
