@@ -80,7 +80,7 @@ namespace cgame
 
     void init()
     {
-        if (SDL_Init(SDL_INIT_VIDEO) < 0)
+        if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) < 0)
             std::cerr << "SDL could not initialize! Error: " << SDL_GetError() << std::endl;
 
         if (!IMG_Init(IMG_INIT_PNG))
@@ -89,14 +89,18 @@ namespace cgame
         if (TTF_Init() == -1)
             std::cerr << "SDL_ttf could not initialize! Error: " << TTF_GetError() << std::endl;
 
-        if (!Mix_Init(MIX_INIT_MP3 | MIX_INIT_WAVPACK))
+        if (Mix_Init(MIX_INIT_MP3 | MIX_INIT_WAVPACK) == -1)
             std::cerr << "SDL_mixer could not initialize! Error: " << Mix_GetError() << std::endl;
+
+        if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048) == -1)
+            std::cerr << "Mix_OpenAudio failed: " << Mix_GetError() << std::endl;
     }
 
     void quit()
     {
         IMG_Quit();
         TTF_Quit();
+        Mix_CloseAudio();
         Mix_Quit();
         SDL_Quit();
     }
@@ -104,11 +108,9 @@ namespace cgame
     class Surface
     {
     public:
-        // Non-copyable to avoid shallow-copying SDL_Texture* and double-free.
         Surface(const Surface&) = delete;
         Surface& operator=(const Surface&) = delete;
 
-        // Movable: transfer ownership of the underlying SDL_Texture*
         Surface(Surface&& other) noexcept
             : renderer(other.renderer), surfaceTex(other.surfaceTex), x(other.x), y(other.y), width(other.width), height(other.height), rotation(other.rotation), flip(other.flip), rect(other.rect)
         {
@@ -211,7 +213,7 @@ namespace cgame
         float x, y;
         float width, height;      
         float rotation = 0.0f;
-        bool flip;
+        bool flip = false;
         Rect rect; 
     };
 
@@ -244,7 +246,7 @@ namespace cgame
             SDL_Texture* imgTex = IMG_LoadTexture(renderer, filePath.c_str());
             if (imgTex == NULL)
             {
-                std::cerr << "Failed to load image " << filePath << " Error: " << SDL_GetError() << std::endl;
+                std::cerr << "Failed to load image " << filePath << " Error: " << IMG_GetError() << std::endl;
             }
     
             return Surface(renderer, imgTex);
@@ -394,7 +396,7 @@ namespace cgame
                 font = TTF_OpenFont(filePath.c_str(), size);
                 if (!font)
                 {
-                    std::cerr << "Failed to load font " << filePath << " " << SDL_GetError() << std::endl;
+                    std::cerr << "Failed to load font " << filePath << " " << TTF_GetError() << std::endl;
                 }
             }
 
@@ -418,6 +420,48 @@ namespace cgame
 
                 return Surface(display::get_renderer(), tex);
             }
+        };
+    }
+
+    namespace mixer
+    {
+        enum LoopMode
+        {
+            LOOP_NONE = 0,
+            LOOP_INFINITE = -1
+        };
+
+        class Sound
+        {
+        public:
+            Sound(const std::string& filename)
+            {
+                sound = Mix_LoadWAV(filename.c_str());
+                if (!sound)
+                {
+                    std::cerr << "Failed to load sound: " << filename << " Error: " << Mix_GetError() << std::endl;
+                }
+            }
+
+            void play(LoopMode loop = LOOP_NONE)
+            {
+                Mix_PlayChannel(-1, sound, loop);
+            }
+
+            void set_volume(float volume)
+            {
+                if (!sound)
+                    return;
+
+                if (volume < 0.0f) volume = 0.0f;
+                if (volume > 1.0f) volume = 1.0f;
+
+                int vol = static_cast<int>(volume * static_cast<float>(MIX_MAX_VOLUME) + 0.5f);
+                Mix_VolumeChunk(sound, vol);
+            }
+
+        private:
+            Mix_Chunk* sound;
         };
     }
 
