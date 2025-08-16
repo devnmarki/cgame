@@ -33,6 +33,9 @@ int main(int argc, char* argv[])
         cgame::mixer::Sound hurtSound = cgame::mixer::Sound("assets/sfx/hurt.wav");
         hurtSound.set_volume(0.3f);
 
+        cgame::mixer::Music music = cgame::mixer::Music("assets/music/rosalia.mp3");
+        music.play();
+
         int randomInteger = cgame::random::randint(5, 10);
         float randomFloat = cgame::random::random();
         float randomFloatRange = cgame::random::uniform(5, 10);

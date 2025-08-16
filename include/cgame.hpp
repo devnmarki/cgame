@@ -450,6 +450,12 @@ namespace cgame
                 }
             }
 
+            ~Sound()
+            {
+                if (sound)
+                    Mix_FreeChunk(sound);
+            }
+
             void play(LoopMode loop = LOOP_NONE)
             {
                 Mix_PlayChannel(-1, sound, loop);
@@ -468,7 +474,74 @@ namespace cgame
             }
 
         private:
-            Mix_Chunk* sound;
+            Mix_Chunk* sound = NULL;
+        };
+
+        class Music
+        {
+        public:
+            Music(const std::string& filename)
+            {
+                music = Mix_LoadMUS(filename.c_str());
+                if (!music)
+                {
+                    std::cerr << "Failed to load music: " << filename << " Error: " << Mix_GetError() << std::endl;
+                }
+            }
+
+            ~Music()
+            {
+                if (music)
+                    Mix_FreeMusic(music);
+            }
+
+            void play(LoopMode loop = LOOP_NONE)
+            {
+                if (music)
+                {
+                    if (Mix_PlayMusic(music, static_cast<int>(loop)) == -1)
+                    {
+                        std::cerr << "Failed to play music: " << Mix_GetError() << std::endl;
+                    }
+                }
+            }
+
+            void pause()
+            {
+                Mix_PauseMusic();
+            }
+
+            void resume()
+            {
+                Mix_ResumeMusic();
+            }
+
+            void stop()
+            {
+                Mix_HaltMusic();
+            }
+
+            void set_volume(float volume)
+            {
+                if (volume < 0.0f) volume = 0.0f;
+                if (volume > 1.0f) volume = 1.0f;
+
+                int vol = static_cast<int>(volume * static_cast<float>(MIX_MAX_VOLUME) + 0.5f);
+                Mix_VolumeMusic(vol);
+            }
+
+            float get_volume() const
+            {
+                int vol = Mix_VolumeMusic(-1);
+                return static_cast<float>(vol) / static_cast<float>(MIX_MAX_VOLUME);
+            }
+
+            bool is_playing() const
+            {
+                return Mix_PlayingMusic() != 0;
+            }
+        private:
+            Mix_Music* music = NULL;
         };
     }
 
