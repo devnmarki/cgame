@@ -331,7 +331,7 @@ namespace cgame
     {
         static Window* window = nullptr;
 
-        Window set_mode(int width, int height)
+        Window& set_mode(int width, int height)
         {
             window = new Window(width, height, "cgame window");
             return *window;

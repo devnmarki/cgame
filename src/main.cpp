@@ -13,7 +13,7 @@ int main(int argc, char* argv[])
     cgame::init();
 
     {
-        cgame::Window screen = cgame::display::set_mode(1280, 720);
+        cgame::Window& screen = cgame::display::set_mode(1280, 720);
         cgame::Clock clock;
 
         cgame::Surface display(screen.get_renderer(), screen.get_width() / 2, screen.get_height() / 2);
