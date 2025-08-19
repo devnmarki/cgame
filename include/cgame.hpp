@@ -6,10 +6,10 @@
 #include <vector>
 #include <algorithm>
 
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_image.h>
-#include <SDL2/SDL_ttf.h>
-#include <SDL2/SDL_mixer.h>
+#include <SDL.h>
+#include <SDL_image.h>
+#include <SDL_ttf.h>
+#include <SDL_mixer.h>
 
 namespace cgame
 {
@@ -46,9 +46,20 @@ namespace cgame
             return { x, y, w, h };
         }
 
-        SDL_FRect to_sdl() const
+        SDL_FRect to_sdl_frect() const
         {
             return { x, y, w, h };
+        }
+
+        SDL_Rect to_sdl_rect() const
+        {
+            return 
+            { 
+                static_cast<int>(x), 
+                static_cast<int>(y), 
+                static_cast<int>(w), 
+                static_cast<int>(h) 
+            };
         }
 
         bool colliderect(const Rect &other)
@@ -82,7 +93,7 @@ namespace cgame
         }
     };
 
-    void init()
+    inline void init()
     {
         if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) < 0)
             std::cerr << "SDL could not initialize! Error: " << SDL_GetError() << std::endl;
@@ -100,47 +111,9 @@ namespace cgame
             std::cerr << "Mix_OpenAudio failed: " << Mix_GetError() << std::endl;
     }
 
-    void quit()
-    {
-        IMG_Quit();
-        TTF_Quit();
-        Mix_CloseAudio();
-        Mix_Quit();
-        SDL_Quit();
-    }
-
     class Surface
     {
     public:
-        Surface(const Surface&) = delete;
-        Surface& operator=(const Surface&) = delete;
-
-        Surface(Surface&& other) noexcept
-            : renderer(other.renderer), surfaceTex(other.surfaceTex), x(other.x), y(other.y), width(other.width), height(other.height), rotation(other.rotation), flip(other.flip), rect(other.rect)
-        {
-            other.surfaceTex = nullptr;
-        }
-
-        Surface& operator=(Surface&& other) noexcept
-        {
-            if (this != &other)
-            {
-                if (surfaceTex)
-                    SDL_DestroyTexture(surfaceTex);
-
-                renderer = other.renderer;
-                surfaceTex = other.surfaceTex;
-                x = other.x; y = other.y;
-                width = other.width; height = other.height;
-                rotation = other.rotation;
-                flip = other.flip;
-                rect = other.rect;
-
-                other.surfaceTex = nullptr;
-            }
-            return *this;
-        }
-
         Surface(SDL_Renderer* _renderer, float _width, float _height)
             : renderer(_renderer), width(_width), height(_height), x(0), y(0)
         {
@@ -172,20 +145,26 @@ namespace cgame
             SDL_SetRenderTarget(renderer, oldTarget);
         }
 
-        void blit(Surface& surface, float _x, float _y)
-        {   
+        void blit(Surface& surface, float _x, float _y, Rect srcRect)
+        {
             x = _x;
             y = _y;
 
             SDL_FPoint center = { width / 2, height / 2 };
-            SDL_FRect dst = { _x, _y, surface.get_width(), surface.get_height() };
+            SDL_FRect dst = { _x, _y, srcRect.w, srcRect.h };
             SDL_RendererFlip flipMode = surface.is_flip() ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE;
+            SDL_Rect src = { (int)srcRect.x, (int)srcRect.y, (int)srcRect.w, (int)srcRect.h };
 
             SDL_Texture* previousTarget = SDL_GetRenderTarget(renderer);
             SDL_SetRenderTarget(renderer, surfaceTex);   
             SDL_SetTextureScaleMode(surface.get_surface(), SDL_ScaleModeNearest);
-            SDL_RenderCopyExF(renderer, surface.get_surface(), NULL, &dst, surface.get_rotation(), NULL, flipMode);
+            SDL_RenderCopyExF(renderer, surface.get_surface(), &src, &dst, surface.get_rotation(), NULL, flipMode);
             SDL_SetRenderTarget(renderer, previousTarget);
+        }
+
+        void blit(Surface& surface, float _x, float _y)
+        {   
+            blit(surface, _x, _y, {0, 0, surface.get_width(), surface.get_height()});
         }
 
         void blit(Surface& surface, Rect _rect)
@@ -234,20 +213,20 @@ namespace cgame
 
     namespace transform
     {
-        Surface& scale(Surface& surface, float newWidth, float newHeight)
+        inline Surface& scale(Surface& surface, float newWidth, float newHeight)
         {
             surface.set_width(newWidth);
             surface.set_height(newHeight);
             return surface;
         }
 
-        Surface& rotate(Surface& surface, float newRotation)
+        inline Surface& rotate(Surface& surface, float newRotation)
         {
             surface.set_rotation(newRotation);
             return surface;
         }
 
-        Surface& flip(Surface& surface, bool flip)
+        inline Surface& flip(Surface& surface, bool flip)
         {
             surface.set_flip(flip);
             return surface;
@@ -256,7 +235,7 @@ namespace cgame
 
     namespace image
     {
-        Surface load(SDL_Renderer* renderer, std::string filePath)
+        inline Surface load(SDL_Renderer* renderer, std::string filePath)
         {
             SDL_Texture* imgTex = IMG_LoadTexture(renderer, filePath.c_str());
             if (imgTex == NULL)
@@ -285,6 +264,8 @@ namespace cgame
             {
                 std::cerr << "Failed to create renderer. Error: " << SDL_GetError() << std::endl;
             }
+
+            SDL_SetRenderDrawBlendMode(m_renderer, SDL_BLENDMODE_BLEND);
 
             screenSurface = new Surface(m_renderer, m_width, m_height);
         }
@@ -339,13 +320,13 @@ namespace cgame
     {
         static Window* window = nullptr;
 
-        Window& set_mode(int width, int height)
+        inline Window& set_mode(int width, int height)
         {
             window = new Window(width, height, "cgame window");
             return *window;
         }
 
-        void set_caption(std::string caption)
+        inline void set_caption(std::string caption)
         {
             if (window)
             {
@@ -353,22 +334,22 @@ namespace cgame
             }
         }
 
-        int get_width()
+        inline int get_width()
         {
             return window->get_width();
         }
 
-        int get_height()
+        inline int get_height()
         {
             return window->get_height();
         }
 
-        Vec2 get_size()
+        inline Vec2 get_size()
         {
             return { (float)window->get_width(), (float)window->get_height() };
         }
 
-        SDL_Renderer* get_renderer()
+        inline SDL_Renderer* get_renderer()
         {
             return window->get_renderer();
         }
@@ -376,22 +357,22 @@ namespace cgame
 
     namespace draw
     {
-        void rect(Surface& surface, Rect rect, Color color = { 0, 0, 0, 255 })
+        inline void rect(Surface& surface, Rect rect, Color color = { 0, 0, 0, 255 })
         {
             SDL_Texture* prevTarget = SDL_GetRenderTarget(display::get_renderer());
             SDL_SetRenderTarget(display::get_renderer(), surface.get_surface());
             SDL_SetRenderDrawColor(display::get_renderer(), color.r, color.g, color.b, color.a);
-            SDL_FRect sdlRect = rect.to_sdl();
+            SDL_FRect sdlRect = rect.to_sdl_frect();
             SDL_RenderDrawRectF(display::get_renderer(), &sdlRect);
             SDL_SetRenderTarget(display::get_renderer(), prevTarget);
         }
 
-        void fill_rect(Surface& surface, Rect rect, Color color = { 0, 0, 0, 255 })
+        inline void fill_rect(Surface& surface, Rect rect, Color color = { 0, 0, 0, 255 })
         {
             SDL_Texture* prevTarget = SDL_GetRenderTarget(display::get_renderer());
             SDL_SetRenderTarget(display::get_renderer(), surface.get_surface());
             SDL_SetRenderDrawColor(display::get_renderer(), color.r, color.g, color.b, color.a);
-            SDL_FRect sdlRect = rect.to_sdl();
+            SDL_FRect sdlRect = rect.to_sdl_frect();
             SDL_RenderFillRectF(display::get_renderer(), &sdlRect);
             SDL_SetRenderTarget(display::get_renderer(), prevTarget);
         }
@@ -405,7 +386,7 @@ namespace cgame
             float size;
             TTF_Font* font;
 
-            Font(std::string _filePath, float _size)
+            Font(std::string _filePath, float _size = 12.0f)
                 : filePath(_filePath), size(_size)
             {
                 font = TTF_OpenFont(filePath.c_str(), size);
@@ -440,6 +421,11 @@ namespace cgame
 
                 return Surface(display::get_renderer(), tex);
             }
+
+            void set_font_size(float _size)
+            {
+                TTF_SetFontSize(font, static_cast<int>(_size));
+            }
         };
     }
 
@@ -447,8 +433,8 @@ namespace cgame
     {
         enum LoopMode
         {
-            LOOP_NONE = 0,
-            LOOP_INFINITE = -1
+            LOOP_INFINITE = -1,
+            LOOP_NONE = 0
         };
 
         class Sound
@@ -562,24 +548,24 @@ namespace cgame
     {
         static std::mt19937 rng(std::random_device{}());
 
-        void seed(unsigned int s)
+        inline void seed(unsigned int s)
         {
             rng.seed(s);
         }
 
-        float random() 
+        inline float random() 
         {
             std::uniform_real_distribution<float> dist(0.0f, 1.0f);
             return dist(rng);
         }
 
-        float uniform(float a, float b)
+        inline float uniform(float a, float b)
         {
             std::uniform_real_distribution<float> dist(a, b);
             return dist(rng);
         }
 
-        int randint(int a, int b)
+        inline int randint(int a, int b)
         {
             std::uniform_int_distribution<int> dist(a, b);
             return dist(rng);
@@ -635,7 +621,7 @@ namespace cgame
         Uint8 mouseButton;
     };
 
-    bool getEvents(Event& e)
+    inline bool get_events(Event& e)
     {
         SDL_Event sdlEvent;
         if (SDL_PollEvent(&sdlEvent))
@@ -670,14 +656,64 @@ namespace cgame
         return false;
     }
 
+
+    inline SDL_Event to_sdl_event(const Event& e)
+    {
+        SDL_Event sdlEvent{};
+        switch (e.type)
+        {
+        case QUIT:
+            sdlEvent.type = SDL_QUIT;
+            break;
+
+        case KEYDOWN:
+            sdlEvent.type = SDL_KEYDOWN;
+            sdlEvent.key.type = SDL_KEYDOWN;
+            sdlEvent.key.keysym.sym = e.key;
+            break;
+
+        case KEYUP:
+            sdlEvent.type = SDL_KEYUP;
+            sdlEvent.key.type = SDL_KEYUP;
+            sdlEvent.key.keysym.sym = e.key;
+            break;
+
+        case MOUSEDOWN:
+            sdlEvent.type = SDL_MOUSEBUTTONDOWN;
+            sdlEvent.button.type = SDL_MOUSEBUTTONDOWN;
+            sdlEvent.button.x = e.mouseX;
+            sdlEvent.button.y = e.mouseY;
+            sdlEvent.button.button = e.mouseButton;
+            break;
+
+        case MOUSEUP:
+            sdlEvent.type = SDL_MOUSEBUTTONUP;
+            sdlEvent.button.type = SDL_MOUSEBUTTONUP;
+            sdlEvent.button.x = e.mouseX;
+            sdlEvent.button.y = e.mouseY;
+            sdlEvent.button.button = e.mouseButton;
+            break;
+        }
+        return sdlEvent;
+    }
+
     namespace mouse
     {
-        Vec2 get_pos()
+        inline Vec2 get_pos()
         {
             int mx, my;
             SDL_GetMouseState(&mx, &my);
             return { static_cast<float>(mx), static_cast<float>(my) };
         }
+    }
+
+    inline void quit()
+    {
+        IMG_Quit();
+        TTF_Quit();
+        Mix_CloseAudio();
+        Mix_Quit();
+        SDL_Quit();
     }
 }
 

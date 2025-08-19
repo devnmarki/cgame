@@ -1,4 +1,2 @@
-flip images
 add spritesheets
-
-load and play sounds
+add math

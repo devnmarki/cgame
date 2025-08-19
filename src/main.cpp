@@ -3,10 +3,9 @@
 #include <iomanip>
 #include <algorithm>
 
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_image.h>
-
 #include "../include/cgame.hpp"
+
+static const float RENDER_SCALE = 2.0f;
 
 int main(int argc, char* argv[]) 
 {
@@ -53,7 +52,7 @@ int main(int argc, char* argv[])
         while (running)
         {
             cgame::Event e;
-            while (cgame::getEvents(e))
+            while (cgame::get_events(e))
             {
                 if (e.type == cgame::QUIT)
                 {
@@ -108,13 +107,15 @@ int main(int argc, char* argv[])
             cgame::draw::rect(display, playerRect, { 255, 0, 0 });
 
             cgame::Surface text = testFont.render("Hello World!", { 255, 255, 255 });
+            cgame::Surface centeredText = testFont.render("Centered Text", { 255, 0, 0 });
 
-            playerImage.set_alpha(std::max(0.0f, 100.0f + playerRect.left()));
+            playerImage.set_alpha(std::max(0.0f, 100.0f + playerRect.x));
 
             rot++;
             display.blit(cgame::transform::rotate(cgame::transform::flip(playerImage, true), rot), playerRect);
             display.blit(blueBox, blueBoxRect);
             display.blit(text, 50, 50);
+            display.blit(centeredText, (display.get_width() / 2 - centeredText.get_width()) / RENDER_SCALE, (display.get_height() / 2 - centeredText.get_height()) / RENDER_SCALE);
             
             screen.blit(cgame::transform::scale(display, screen.get_width(), screen.get_height()), 0, 0);
 
